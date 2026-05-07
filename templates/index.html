@@ -20,7 +20,7 @@
     body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
     body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:9999}
     .blob{position:fixed;top:-150px;left:50%;transform:translateX(-50%);width:700px;height:350px;background:radial-gradient(ellipse,rgba(0,229,160,.07) 0%,transparent 70%);pointer-events:none}
-    .app{max-width:960px;margin:0 auto;padding:36px 20px 80px;position:relative;z-index:1}
+    .app{max-width:960px;margin:0 auto;padding:72px 20px 80px;position:relative;z-index:1}
 
     /* Header */
     header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:40px;flex-wrap:wrap}
@@ -140,6 +140,22 @@
 </head>
 <body>
 <div class="blob"></div>
+<div id="userBar" style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(8,11,15,.92);backdrop-filter:blur(8px);border-bottom:1px solid #1a2230;padding:10px 20px;display:flex;align-items:center;justify-content:space-between">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#4a6070">● WOL Remote</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <img id="userPic" src="" style="width:26px;height:26px;border-radius:50%;display:none;border:1px solid #233040"/>
+    <span id="userName" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7a9ab0"></span>
+    <a href="/logout" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#4a6070;text-decoration:none;padding:4px 10px;border:1px solid #1a2230;border-radius:6px">Salir</a>
+  </div>
+</div>
+<div id="userBar" style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(8,11,15,.9);backdrop-filter:blur(8px);border-bottom:1px solid #1a2230;padding:10px 20px;display:flex;align-items:center;justify-content:space-between">
+  <div style="font-family:JetBrains Mono,monospace;font-size:11px;color:#4a6070">WOL Remote</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <img id="userPic" src="" style="width:26px;height:26px;border-radius:50%;display:none;border:1px solid #1a2230"/>
+    <span id="userName" style="font-family:JetBrains Mono,monospace;font-size:11px;color:#7a9ab0"></span>
+    <a href="/logout" style="font-family:JetBrains Mono,monospace;font-size:11px;color:#4a6070;text-decoration:none;padding:4px 10px;border:1px solid #1a2230;border-radius:6px;transition:all .2s" onmouseover="this.style.color='#00e5a0';this.style.borderColor='#00e5a0'" onmouseout="this.style.color='#4a6070';this.style.borderColor='#1a2230'">Cerrar sesión</a>
+  </div>
+</div>
 <div class="app">
 
   <header>
@@ -274,6 +290,15 @@ const API = '';
 let routers = [], devices = [], currentTab = 'devices', editingId = null, editingType = null;
 
 async function init() {
+  try {
+    const r = await fetch('/api/me');
+    const u = await r.json();
+    if (u.authenticated) {
+      document.getElementById('userName').textContent = u.name || u.email;
+      const pic = document.getElementById('userPic');
+      if (u.picture) { pic.src = u.picture; pic.style.display = 'block'; }
+    }
+  } catch(e) {}
   await Promise.all([loadRouters(), loadDevices()]);
   log('Servidor WOL conectado', 'success');
   log('Listo para enviar magic packets UDP', 'info');
