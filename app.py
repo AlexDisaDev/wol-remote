@@ -3,13 +3,16 @@
 Wake-on-LAN Web App — con login Google OAuth
 """
 import json, os, socket, subprocess, platform
+import ProxyFix
 from datetime import datetime
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session
 from flask_cors import CORS
 from authlib.integrations.flask_client import OAuth
+from werkzeug.middleware.proxy_fix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 CORS(app)
 
