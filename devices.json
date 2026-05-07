@@ -1,0 +1,15 @@
+{
+  "devices": [
+    {
+      "id": "1778178889702",
+      "name": "I3",
+      "mac": "34-5A-60-51-BF-1F",
+      "broadcast": "255.255.255.0",
+      "port": 9,
+      "description": "",
+      "created_at": "2026-05-07T20:34:49.702836",
+      "last_wake": null,
+      "last_status": "error"
+    }
+  ]
+}
