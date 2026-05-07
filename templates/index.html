@@ -239,9 +239,16 @@
         <select id="fRouter"><option value="">Sin router (solo LAN)</option></select>
         <div class="hint">Selecciona el router de tu red para WOL remoto</div>
       </div>
-      <div class="fg">
-        <label>IP Local (para verificar encendido)</label>
-        <input id="fLocalIp" placeholder="192.168.0.37"/>
+      <div class="fr">
+        <div class="fg">
+          <label>IP Local (para ping)</label>
+          <input id="fLocalIp" placeholder="192.168.0.37"/>
+        </div>
+        <div class="fg">
+          <label>Puerto UDP propio</label>
+          <input id="fPort" type="number" placeholder="9 (del router)"/>
+          <div class="hint">Deja vacío para usar el del router</div>
+        </div>
       </div>
       <div class="fg">
         <label>Notas</label>
@@ -360,6 +367,7 @@ function renderDevices() {
       <div class="card-meta">
         ${router ? `<div class="meta"><span class="meta-k">ROUTER</span><span class="meta-v">${esc(router.name)}</span></div>` : ''}
         ${d.local_ip ? `<div class="meta"><span class="meta-k">IP LOCAL</span><span class="meta-v">${esc(d.local_ip)}</span></div>` : ''}
+        ${d.port ? `<div class="meta"><span class="meta-k">PUERTO</span><span class="meta-v">UDP/${d.port}</span></div>` : ''}
         ${d.description ? `<div class="meta"><span class="meta-k">NOTA</span><span class="meta-v">${esc(d.description)}</span></div>` : ''}
       </div>
       ${router ? `<div class="router-badge">📡 ${esc(router.public_ip)}:${router.port}</div>` : ''}
@@ -472,7 +480,7 @@ function openModal(type) {
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
   editingId = null; editingType = null;
-  ['fName','fMac','fLocalIp','fDesc','rName','rIp','rNotes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['fName','fMac','fLocalIp','fPort','fDesc','rName','rIp','rNotes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('rPort').value = '9';
   document.getElementById('fRouter').value = '';
 }
@@ -486,6 +494,7 @@ function editItem(type, id) {
     document.getElementById('fName').value = d.name || '';
     document.getElementById('fMac').value = d.mac || '';
     document.getElementById('fLocalIp').value = d.local_ip || '';
+    document.getElementById('fPort').value = d.port || '';
     document.getElementById('fDesc').value = d.description || '';
     openModal('device');
     document.getElementById('fRouter').value = d.router_id || '';
@@ -514,7 +523,8 @@ async function saveItem() {
     const name = document.getElementById('fName').value.trim();
     const mac  = document.getElementById('fMac').value.trim();
     if (!name || !mac) { toast('Nombre y MAC son obligatorios', 'error'); return; }
-    payload = { name, mac, router_id: document.getElementById('fRouter').value, local_ip: document.getElementById('fLocalIp').value.trim(), description: document.getElementById('fDesc').value.trim() };
+    const portVal = document.getElementById('fPort').value.trim();
+    payload = { name, mac, router_id: document.getElementById('fRouter').value, local_ip: document.getElementById('fLocalIp').value.trim(), port: portVal ? parseInt(portVal) : null, description: document.getElementById('fDesc').value.trim() };
     url = editingId ? `/api/devices/${editingId}` : '/api/devices';
     method = editingId ? 'PUT' : 'POST';
   }

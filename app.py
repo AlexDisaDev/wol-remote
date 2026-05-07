@@ -3,7 +3,6 @@
 Wake-on-LAN Web App — con login Google OAuth
 """
 import json, os, socket, subprocess, platform
-from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import datetime
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session
@@ -11,7 +10,6 @@ from flask_cors import CORS
 from authlib.integrations.flask_client import OAuth
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 CORS(app)
 
@@ -195,6 +193,7 @@ def create_device():
     mac       = b.get("mac", "").strip()
     router_id = b.get("router_id", "").strip()
     local_ip  = b.get("local_ip", "").strip()
+    port      = b.get("port", None)
     desc      = b.get("description", "").strip()
     if not name or not mac:
         return jsonify({"error": "Nombre y MAC son obligatorios"}), 400
@@ -203,7 +202,7 @@ def create_device():
         return jsonify({"error": "MAC inválida"}), 400
     data = load()
     device = {"id": new_id(), "name": name, "mac": mac.upper(),
-              "router_id": router_id, "local_ip": local_ip, "description": desc,
+              "router_id": router_id, "local_ip": local_ip, "port": port, "description": desc,
               "created_at": datetime.now().isoformat(), "last_wake": None, "last_status": None}
     data["devices"].append(device)
     save(data); return jsonify(device), 201
@@ -238,7 +237,8 @@ def wake_device(did):
         return jsonify({"error": "Dispositivo no encontrado"}), 404
     router = next((r for r in data["routers"] if r["id"] == device.get("router_id")), None)
     target_ip = router["public_ip"] if router else "255.255.255.255"
-    port = router["port"] if router else 9
+    # Device port overrides router port if set
+    port = int(device.get("port") or (router["port"] if router else 9))
     try:
         result = send_wol(device["mac"], target_ip, port)
         device["last_wake"] = datetime.now().isoformat()
